@@ -391,6 +391,73 @@ namespace Amply.Server.Controllers
             return Ok(response);
         }
 
+        // Mark a reservation as done (charging session completed)
+        [HttpPatch("{id}/done")]
+        public async Task<IActionResult> MarkReservationDone(string id)
+        {
+            var reservation = await _reservationCollection.Find(r => r.Id == id).FirstOrDefaultAsync();
+            if (reservation == null)
+                return NotFound(new { message = "Reservation not found" });
+
+            // Only confirmed reservations can be marked as done
+            if (!reservation.Status.Equals("Confirmed", StringComparison.OrdinalIgnoreCase))
+                return BadRequest(new { message = $"Cannot mark reservation as done. Current status: {reservation.Status}" });
+
+            // Update reservation status to Done
+            var update = Builders<Reservation>.Update
+                .Set(r => r.Status, "Done")
+                .Set(r => r.UpdatedAt, DateTime.UtcNow);
+
+            var result = await _reservationCollection.UpdateOneAsync(r => r.Id == id, update);
+            if (result.MatchedCount == 0)
+                return NotFound(new { message = "Reservation not found" });
+
+            // Release the slot and update station availability
+            var dayStart = reservation.ReservationDate.Date;
+            var dayEnd = reservation.ReservationDate.Date.AddDays(1);
+
+            var stationFilter = Builders<ChargingStation>.Filter.And(
+                Builders<ChargingStation>.Filter.Eq(cs => cs.StationId, reservation.StationId),
+                Builders<ChargingStation>.Filter.ElemMatch(cs => cs.Schedule,
+                    s => s.Date >= dayStart && s.Date < dayEnd && s.SlotNumber == reservation.SlotNo && !s.IsAvailable)
+            );
+
+            var stationUpdate = Builders<ChargingStation>.Update
+                .Set("schedule.$.isAvailable", true)
+                .Inc(cs => cs.ActiveBookings, -1)
+                .Inc(cs => cs.AvailableSlots, 1)
+                .Set(cs => cs.Timestamp, DateTime.UtcNow);
+
+            await _chargingStationCollection.UpdateOneAsync(stationFilter, stationUpdate);
+
+            var updatedReservation = await _reservationCollection.Find(r => r.Id == id).FirstOrDefaultAsync();
+
+            var response = new ReservationResponse
+            {
+                Id = updatedReservation.Id,
+                ReservationCode = updatedReservation.ReservationCode,
+                FullName = updatedReservation.FullName,
+                NIC = updatedReservation.NIC,
+                VehicleNumber = updatedReservation.VehicleNumber,
+                StationId = updatedReservation.StationId,
+                StationName = updatedReservation.StationName,
+                SlotNo = updatedReservation.SlotNo,
+                BookingDate = updatedReservation.BookingDate,
+                ReservationDate = updatedReservation.ReservationDate,
+                StartTime = updatedReservation.StartTime,
+                EndTime = updatedReservation.EndTime,
+                Status = updatedReservation.Status,
+                QrCode = updatedReservation.QrCode,
+                CreatedAt = updatedReservation.CreatedAt,
+                UpdatedAt = updatedReservation.UpdatedAt
+            };
+
+            return Ok(new { 
+                message = "Reservation marked as done successfully", 
+                reservation = response 
+            });
+        }
+
         private string GenerateQrCodeBase64(string reservationCode, string fullName, int slotNo, TimeSpan startTime, TimeSpan endTime, string vehicleNumber)
         {
             var qrContent = new
