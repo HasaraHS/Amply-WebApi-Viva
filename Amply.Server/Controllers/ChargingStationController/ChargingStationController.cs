@@ -23,6 +23,16 @@ namespace Amply.Server.Controllers
             var schedule = new List<ScheduleSlot>();
             var today = DateTime.Today;
 
+            // Define time slots (2-hour slots from 8 AM to 6 PM)
+            var timeSlots = new[]
+            {
+                new { Start = new TimeSpan(8, 0, 0), End = new TimeSpan(10, 0, 0) },   // Slot 1: 8:00 AM - 10:00 AM
+                new { Start = new TimeSpan(10, 0, 0), End = new TimeSpan(12, 0, 0) },  // Slot 2: 10:00 AM - 12:00 PM
+                new { Start = new TimeSpan(12, 0, 0), End = new TimeSpan(14, 0, 0) },  // Slot 3: 12:00 PM - 2:00 PM
+                new { Start = new TimeSpan(14, 0, 0), End = new TimeSpan(16, 0, 0) },  // Slot 4: 2:00 PM - 4:00 PM
+                new { Start = new TimeSpan(16, 0, 0), End = new TimeSpan(18, 0, 0) }   // Slot 5: 4:00 PM - 6:00 PM
+            };
+
             for (int day = 0; day < 7; day++)
             {
                 var currentDate = today.AddDays(day);
@@ -32,6 +42,8 @@ namespace Amply.Server.Controllers
                     schedule.Add(new ScheduleSlot
                     {
                         Date = currentDate,
+                        StartTime = timeSlots[slot - 1].Start,
+                        EndTime = timeSlots[slot - 1].End,
                         IsAvailable = true,
                         SlotNumber = slot
                     });

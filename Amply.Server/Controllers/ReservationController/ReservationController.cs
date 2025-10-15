@@ -12,11 +12,13 @@ namespace Amply.Server.Controllers
     public class ReservationController : ControllerBase
     {
         private readonly IMongoCollection<Reservation> _reservationCollection;
+        private readonly IMongoCollection<ChargingStation> _chargingStationCollection;
 
         public ReservationController(IMongoClient mongoClient)
         {
             var database = mongoClient.GetDatabase("usersDotNet");
             _reservationCollection = database.GetCollection<Reservation>("reservations");
+            _chargingStationCollection = database.GetCollection<ChargingStation>("chargingStations");
         }
 
         // Get all reservations
@@ -168,6 +170,29 @@ namespace Amply.Server.Controllers
 
             if (reservationDateUtc < todayUtc || reservationDateUtc > maxDateUtc)
                 return BadRequest(new { message = "Reservation date must be within the next 7 days." });
+
+            // Ensure the requested slot is still available and atomically reserve it
+            var dayStart = reservationDateUtc;
+            var dayEnd = reservationDateUtc.AddDays(1);
+
+            var filter = Builders<ChargingStation>.Filter.And(
+                Builders<ChargingStation>.Filter.Eq(cs => cs.StationId, request.StationId),
+                Builders<ChargingStation>.Filter.ElemMatch(cs => cs.Schedule,
+                    s => s.Date >= dayStart && s.Date < dayEnd && s.SlotNumber == request.SlotNo && s.IsAvailable)
+            );
+
+            var update = Builders<ChargingStation>.Update
+                .Set("schedule.$.isAvailable", false)
+                .Inc(cs => cs.ActiveBookings, 1)
+                .Inc(cs => cs.AvailableSlots, -1)
+                .Set(cs => cs.Timestamp, DateTime.UtcNow);
+
+            var stationUpdateResult = await _chargingStationCollection.UpdateOneAsync(filter, update);
+
+            if (stationUpdateResult.ModifiedCount == 0)
+            {
+                return BadRequest(new { message = "Selected slot is no longer available. Please choose another slot." });
+            }
 
             var reservation = new Reservation
             {
