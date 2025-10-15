@@ -222,7 +222,39 @@ public async Task<IActionResult> Activate(string nic)
             return Ok(response);
         }
 
+
+        // GET: api/v1/userprofiles/active/{nic}
+        // Retrieves an active EV owner profile by NIC
+        [HttpGet("active/{nic}")]
+        public async Task<IActionResult> GetActiveEvOwnerByNIC(string nic)
+        {
+            var owner = await _ownerCollection
+                .Find(o => o.NIC == nic && o.Status == "active" && o.Role == "EvOwner")
+                .FirstOrDefaultAsync();
+
+            if (owner == null)
+                return NotFound(new { message = "Active EV owner profile not found." });
+
+            var response = new OwnerProfileResponse
+            {
+                NIC = owner.NIC,
+                FullName = owner.FullName,
+                Email = owner.Email,
+                Phone = owner.Phone,
+                Status = owner.Status,
+                Role = owner.Role,
+                CreatedAt = owner.CreatedAt,
+                UpdatedAt = owner.UpdatedAt
+            };
+
+            return Ok(response);
+        }
+
+
     }
+
+
+
 
     public class LoginRequest
     {
