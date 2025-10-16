@@ -545,29 +545,32 @@ useEffect(() => {
             {isEdit && (
         <div className="flex justify-end gap-3 px-6 pb-6">
           {formData.status === "active" && (
-            <button
-              onClick={() => handleDeactivate(formData.nic)}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-            >
-              Deactivate
-            </button>
-          )}
-          {formData.status === "deactive" && (
-            <button
-              onClick={() => handleRequestReactivate(formData.nic)}
-              className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
-            >
-              Request to Reactivate
-            </button>
-          )}
-          {formData.status === "requested to reactivate" && (
-            <button
-              onClick={() => handleActivate(formData.nic)}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-            >
-              Activate
-            </button>
-          )}
+  <button
+    onClick={() => handleDeactivate(formData.nic)}
+    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+  >
+    Deactivate
+  </button>
+)}
+
+{formData.status === "deactive" && (
+  <button
+    onClick={() => handleActivate(formData.nic)}
+    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+  >
+    Activate
+  </button>
+)}
+
+{formData.status === "requested to reactivate" && (
+  <button
+    onClick={() => handleActivate(formData.nic)}
+    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+  >
+    Activate
+  </button>
+)}
+
         </div>
       )}
           </div>
