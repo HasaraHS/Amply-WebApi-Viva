@@ -77,12 +77,14 @@ namespace Amply.Server
             // Add CORS policy
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowAnywhere", policy =>
-                {
-                    policy.AllowAnyOrigin()  // allow requests from any domain
-                          .AllowAnyHeader()  // allow all headers
-                          .AllowAnyMethod(); // allow GET, POST, PUT, DELETE, etc.
-                });
+                options.AddPolicy("AllowReactApp",
+                    policy =>
+                    {
+                        policy.WithOrigins("http://localhost:5173") 
+                            .AllowAnyHeader()
+                            .AllowAnyMethod()
+                            .AllowCredentials();
+                    });
             });
 
 
