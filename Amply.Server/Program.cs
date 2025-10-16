@@ -77,14 +77,14 @@ namespace Amply.Server
             // Add CORS policy
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowReactApp", policy =>
+                options.AddPolicy("AllowAnywhere", policy =>
                 {
-                    policy.WithOrigins("http://localhost:5173") // React app URL
-                          .AllowAnyHeader()
-                          .AllowAnyMethod()
-                          .AllowCredentials(); // allow cookies or auth headers if needed
+                    policy.AllowAnyOrigin()  // allow requests from any domain
+                          .AllowAnyHeader()  // allow all headers
+                          .AllowAnyMethod(); // allow GET, POST, PUT, DELETE, etc.
                 });
             });
+
 
             // Register IMongoClient in DI
             builder.Services.AddSingleton<IMongoClient>(sp =>
