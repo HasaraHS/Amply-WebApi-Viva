@@ -124,27 +124,37 @@ namespace Amply.Server.Controllers
         // PUT: api/v1/userprofiles/{nic}
         // Updates an existing EV owner profile
         [HttpPut("{nic}")]
-        public async Task<IActionResult> Update(string nic, [FromBody] OwnerProfileRequest request)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+public async Task<IActionResult> Update(string nic, [FromBody] OwnerProfileRequest request)
+{
+    // Manually validate only required fields for update
+    if (string.IsNullOrWhiteSpace(request.FullName) ||
+        string.IsNullOrWhiteSpace(request.Email) ||
+        string.IsNullOrWhiteSpace(request.Phone))
+    {
+        return BadRequest(new { message = "FullName, Email, and Phone are required." });
+    }
 
-            var owner = await _ownerCollection.Find(o => o.NIC == nic).FirstOrDefaultAsync();
-            if (owner == null)
-                return NotFound(new { message = "Owner profile not found." });
+    var owner = await _ownerCollection.Find(o => o.NIC == nic).FirstOrDefaultAsync();
+    if (owner == null)
+        return NotFound(new { message = "Owner profile not found." });
 
-            var update = Builders<OwnerProfile>.Update
-                .Set(o => o.FullName, request.FullName)
-                .Set(o => o.Email, request.Email)
-                .Set(o => o.Password, request.Password) // show password
-                .Set(o => o.Phone, request.Phone)
-                .Set(o => o.Status, request.Status)
-                .Set(o => o.UpdatedAt, DateTime.UtcNow);
+    var updateDef = Builders<OwnerProfile>.Update
+        .Set(o => o.FullName, request.FullName)
+        .Set(o => o.Email, request.Email)
+        .Set(o => o.Phone, request.Phone)
+        .Set(o => o.Status, request.Status)
+        .Set(o => o.UpdatedAt, DateTime.UtcNow);
 
-            await _ownerCollection.UpdateOneAsync(o => o.NIC == nic, update);
+    if (!string.IsNullOrWhiteSpace(request.Password))
+    {
+        updateDef = updateDef.Set(o => o.Password, request.Password);
+    }
 
-            return Ok(new { message = "Owner profile updated successfully" });
-        }
+    await _ownerCollection.UpdateOneAsync(o => o.NIC == nic, updateDef);
+
+    return Ok(new { message = "Profile updated successfully" });
+}
+
 
         // DELETE: api/v1/userprofiles/{nic}
         // Deletes an EV owner profile by NIC
