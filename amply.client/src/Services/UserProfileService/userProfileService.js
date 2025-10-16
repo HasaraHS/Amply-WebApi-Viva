@@ -49,3 +49,8 @@ export const activateUserProfile = async (nic) => {
 export const getOwnerByNIC = async (nic) => {
     return await axios.get(`${API_URL}/${nic}`);
 };
+
+// Get active EV owner profile by NIC
+export const getActiveEvOwnerByNIC = async (nic) => {
+    return await axios.get(`${API_URL}/active/${nic}`);
+};

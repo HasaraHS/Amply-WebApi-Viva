@@ -3,6 +3,7 @@ import React, {useState, useEffect} from "react"
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, Zap, MapPin, Calendar, Clock, Users, CheckCircle2, AlertCircle } from "lucide-react"
 import { getUserProfiles } from "../../../../Services/UserProfileService/userProfileService";
+import { getActiveChargingStations } from "../../../../Services/ChargingStationManagementService/chargingStationService";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -10,18 +11,40 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [stations, setStations] = useState([]);
+  const [stationsLoading, setStationsLoading] = useState(true);
+  const [stationsError, setStationsError] = useState(null);
+
   const recentBookings = [
     { id: 1, owner: "Sarah Johnson", nic: "199512345678", station: "Downtown Station A", date: "Oct 2, 2025", time: "10:00 AM", status: "confirmed" },
     { id: 2, owner: "Michael Chen", nic: "198823456789", station: "Mall Parking B", date: "Oct 2, 2025", time: "2:30 PM", status: "pending" },
     { id: 3, owner: "Emma Williams", nic: "200134567890", station: "Airport Station C", date: "Oct 3, 2025", time: "8:00 AM", status: "confirmed" },
   ]
 
-  const chargingStations = [
-    { name: "Downtown Station A", location: "City Center", slots: 4, available: 3, type: "DC Fast" },
-    { name: "Mall Parking B", location: "Shopping District", slots: 6, available: 2, type: "AC/DC" },
-    { name: "Airport Station C", location: "Airport Zone", slots: 8, available: 5, type: "DC Fast" },
-    { name: "City Center D", location: "Business District", slots: 4, available: 0, type: "AC Standard" },
-  ]
+  // fetch active charging stations for Station Status widget
+  useEffect(() => {
+    const fetchStations = async () => {
+      try {
+        const res = await getActiveChargingStations();
+        const data = Array.isArray(res.data) ? res.data : [];
+        // map API response to widget shape
+        const mapped = data.map((cs) => ({
+          name: cs.stationName,
+          location: cs.location?.city || cs.location?.address || "",
+          slots: cs.totalSlots,
+          available: cs.availableSlots,
+          type: cs.type
+        }));
+        setStations(mapped);
+      } catch (e) {
+        console.error("Error fetching active charging stations", e);
+        setStationsError("Failed to load stations");
+      } finally {
+        setStationsLoading(false);
+      }
+    };
+    fetchStations();
+  }, []);
 
   // fetch registered owners list
   useEffect(() => {
@@ -145,7 +168,12 @@ export default function HomePage() {
             <h3 className="text-xl font-semibold text-gray-900">Station Status</h3>
           </div>
           <div className="p-6 space-y-3">
-            {chargingStations.map((station, index) => (
+            {stationsLoading && <p className="text-sm text-gray-500">Loading stations...</p>}
+            {stationsError && <p className="text-sm text-red-500">{stationsError}</p>}
+            {!stationsLoading && !stationsError && stations.length === 0 && (
+              <p className="text-sm text-gray-500">No stations found.</p>
+            )}
+            {stations.map((station, index) => (
               <div key={index} className="p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
                 <div className="flex items-start justify-between mb-2">
                   <div>
@@ -154,14 +182,7 @@ export default function HomePage() {
                   </div>
                   {station.available === 0 ? <AlertCircle className="w-4 h-4 text-gray-400" /> : <CheckCircle2 className="w-4 h-4 text-gray-900" />}
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1">
-                      {Array.from({ length: station.slots }).map((_, i) => (
-                        <div key={i} className={`w-2 h-2 rounded-full ${i < station.available ? "bg-gray-900" : "bg-gray-300"}`} />
-                      ))}
-                    </div>
-                  </div>
+                <div className="flex items-center justify-end">
                   <p className="text-xs text-gray-600 font-medium">{station.available}/{station.slots} free</p>
                 </div>
                 <p className="text-xs text-gray-500 mt-2 bg-white px-2 py-1 rounded border border-gray-200 inline-block">{station.type}</p>
