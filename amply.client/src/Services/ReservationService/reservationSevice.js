@@ -1,8 +1,10 @@
 // src/services/reservationService.js
 import axios from "axios";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 // Base API URL for reservations
-const API_URL = "https://localhost:7269/api/v1/reservations";
+const API_URL = `${API_BASE_URL}/api/v1/reservations`;
 
 // Get all reservations
 export const getReservations = async () => {

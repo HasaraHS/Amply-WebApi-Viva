@@ -46,11 +46,11 @@ function App() {
           }
         />
 
-        {/*  Reservation Routes (example: only EvOperator can access) */}
+        {/*  Reservation Routes (example: only Backofficer can access) */}
         <Route
           path="/reservations"
           element={
-            <ProtectedRoute allowedRoles={["EvOperator"]}>
+            <ProtectedRoute allowedRoles={["Backofficer"]}>
               <ReservationList />
             </ProtectedRoute>
           }
@@ -58,7 +58,7 @@ function App() {
         <Route
           path="/reservation/new"
           element={
-            <ProtectedRoute allowedRoles={["EvOperator"]}>
+            <ProtectedRoute allowedRoles={["Backofficer"]}>
               <ReservationForm />
             </ProtectedRoute>
           }
@@ -66,7 +66,7 @@ function App() {
         <Route
           path="/reservation/edit/:id"
           element={
-            <ProtectedRoute allowedRoles={["EvOperator"]}>
+            <ProtectedRoute allowedRoles={["Backofficer"]}>
               <ReservationForm />
             </ProtectedRoute>
           }
@@ -76,7 +76,7 @@ function App() {
         <Route
           path="/charging-stations"
           element={
-            <ProtectedRoute allowedRoles={["Backofficer"]}>
+            <ProtectedRoute allowedRoles={["Backofficer" ,  "EvOperator"]}>
               <ChargingStationDashboard />
             </ProtectedRoute>
           }
@@ -84,7 +84,7 @@ function App() {
         <Route
           path="/charging-stations/list"
           element={
-            <ProtectedRoute allowedRoles={["Backofficer"]}>
+            <ProtectedRoute allowedRoles={["Backofficer" ,  "EvOperator"]}>
               <ChargingStationList />
             </ProtectedRoute>
           }
@@ -92,7 +92,7 @@ function App() {
         <Route
           path="/charging-stations/details/:id"
           element={
-            <ProtectedRoute allowedRoles={["Backofficer"]}>
+            <ProtectedRoute allowedRoles={["Backofficer" ,  "EvOperator"]}>
               <StationDetails />
             </ProtectedRoute>
           }
@@ -100,7 +100,7 @@ function App() {
         <Route
           path="/charging-stations/schedule/:id"
           element={
-            <ProtectedRoute allowedRoles={["Backofficer"]}>
+            <ProtectedRoute allowedRoles={["Backofficer" ,  "EvOperator"]}>
               <ScheduleManagement />
             </ProtectedRoute>
           }

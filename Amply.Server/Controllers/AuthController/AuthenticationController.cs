@@ -104,8 +104,8 @@ namespace Amply.Server.Controllers
                 var expires = DateTime.Now.AddMinutes(30);
 
                 var token = new JwtSecurityToken(
-                    issuer: "https://localhost:7269",
-                    audience: "https://localhost:7269",
+                    issuer: "http://localhost:8080",
+                    audience: "http://localhost:8080",
                     claims: claims,
                     expires: expires,
                     signingCredentials: creds

@@ -3,21 +3,17 @@ import { useLocation } from "react-router-dom";
 import {
   Home,
   MapPin,
-  Calendar,
   Users,
-  UserCog,
-  BarChart3,
-  Settings,
-  Zap,
   Battery,
+  Zap,
 } from "lucide-react";
 
 import HomePage from "./HomePage";
+import ChargingStationDashboard from "../../../ChargingStationManagement/ChargingStationDashboard";
 import UserProfileList from "../../../UserProfile/UserProfileList";
 import DashboardNavbar from "./DashboardNavbar";
-import ReservationList from "../../../Reservation/ReservationList";
 
-export default function BackOfficeDashboard() {
+export default function EvOperatorDashboard() {
   const [activeNav, setActiveNav] = useState("home");
   const location = useLocation();
 
@@ -28,9 +24,8 @@ export default function BackOfficeDashboard() {
 
   const navItems = [
     { id: "home", label: "Dashboard", icon: Home },
+    { id: "charging", label: "Charging Stations", icon: Battery },
     // { id: "owners", label: "EV Owners", icon: Users },
-    { id: "reservation", label: "Reservation", icon: MapPin },
-
   ];
 
   const recentBookings = [];
@@ -47,10 +42,10 @@ export default function BackOfficeDashboard() {
             recentOwners={recentOwners}
           />
         );
-      case "reservation":
-        return <ReservationList />;
+      case "charging":
+        return <ChargingStationDashboard />;
       case "owners":
-        return <UserProfileList/>;
+        return <UserProfileList />;
       default:
         return (
           <HomePage
@@ -59,7 +54,6 @@ export default function BackOfficeDashboard() {
             recentOwners={recentOwners}
           />
         );
-        
     }
   };
 
@@ -74,7 +68,7 @@ export default function BackOfficeDashboard() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-white">Amply</h1>
-            <p className="text-sm text-gray-400">Admin Portal</p>
+            <p className="text-sm text-gray-400">EV Operator Portal</p>
           </div>
         </div>
 

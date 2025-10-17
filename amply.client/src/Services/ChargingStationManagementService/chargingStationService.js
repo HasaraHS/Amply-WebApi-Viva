@@ -1,8 +1,10 @@
 // src/services/chargingStationService.js
 import axios from "axios";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 // Base API URL for charging stations
-const API_URL = "https://localhost:7269/api/v1/charging-stations";
+const API_URL = `${API_BASE_URL}/api/v1/charging-stations`;
 
 // Get all charging stations
 export const getChargingStations = async () => {

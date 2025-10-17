@@ -2,8 +2,10 @@
 
 import axios from "axios";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 // Base API URL for user profiles
-const API_URL = "https://localhost:7269/api/v1/userprofiles";
+const API_URL = `${API_BASE_URL}/api/v1/userprofiles`;
 
 // Get all user profiles
 export const getUserProfiles = async () => {
