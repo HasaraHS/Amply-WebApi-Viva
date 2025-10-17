@@ -32,9 +32,8 @@ namespace Amply.Server.Dtos
         [JsonPropertyName("email")]
         public string Email { get; set; } = string.Empty;
 
-        [Required]
         [JsonPropertyName("password")]
-        public string Password { get; set; } = string.Empty;
+        public string? Password { get; set; }
 
         [Required, StringLength(15)]
         [JsonPropertyName("phone")]

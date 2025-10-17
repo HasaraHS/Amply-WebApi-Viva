@@ -27,6 +27,7 @@ export default function EVOwnersPage() {
   const [isEdit, setIsEdit] = useState(false)
   const [editNIC, setEditNIC] = useState("")
   const [message, setMessage] = useState("");
+  const [allowPasswordEdit, setAllowPasswordEdit] = useState(false)
 
   // Fetch all EV owner profiles on component mount
   useEffect(() => {
@@ -120,7 +121,10 @@ export default function EVOwnersPage() {
       nic: validateNIC(formData.nic),
       email: validateEmail(formData.email),
       phone: validatePhone(formData.phone),
-      password: validatePassword(formData.password),
+      password:
+      !isEdit || allowPasswordEdit
+        ? validatePassword(formData.password)
+        : "",
     }
     const hasErrors = Object.values(newErrors).some((error) => error !== "")
     if (hasErrors) {
@@ -129,12 +133,22 @@ export default function EVOwnersPage() {
     }
     try {
       if (isEdit) {
-        await updateUserProfile(editNIC, formData)
+        const payload = { ...formData }
+      if (!allowPasswordEdit || !payload.password) {
+        delete payload.password
+      }
+        await updateUserProfile(editNIC, payload)
         setMessage("Profile updated successfully.");
       } else {
-        await createUserProfile(formData)
-        setMessage("Profile created successfully.");
+      // Always include password when creating
+      if (!formData.password) {
+        alert("Password is required for new profiles.")
+        return
       }
+      await createUserProfile(formData)
+      setMessage("Profile created successfully.")
+    }
+
       setTimeout(() => {
       setShowModal(false);
       setFormData({
@@ -148,6 +162,7 @@ export default function EVOwnersPage() {
       setErrors({});
       setIsEdit(false);
       setEditNIC("");
+      setAllowPasswordEdit(false)
       fetchOwners();
     }, 1000);
     } catch (err) {
@@ -229,6 +244,7 @@ export default function EVOwnersPage() {
       })
       setIsEdit(true)
       setEditNIC(nic)
+      setAllowPasswordEdit(false)
       setShowModal(true)
     } catch (err) {
       alert("Error loading profile: " + (err.response?.data?.message || err.message))
@@ -484,33 +500,57 @@ useEffect(() => {
 
                 <div className="md:col-span-2">
   <label className="block text-sm font-medium text-gray-700 mb-2">
-    Password <span className="text-red-500">*</span>
+    Password <span className="text-red-500">{!isEdit ? "*" : ""}</span>
   </label>
-  <div className="relative">
+  <div className="relative flex items-center gap-3">
     <input
-      type={isEdit ? "password" : (showPassword ? "text" : "password")}
+      type={!isEdit ? (showPassword ? "text" : "password") : (allowPasswordEdit ? (showPassword ? "text" : "password") : "password")}
       name="password"
-      value={isEdit ? "********" : formData.password}
-      onChange={isEdit ? undefined : handleInputChange}
-      readOnly={isEdit}
-      disabled={isEdit}
-      placeholder={isEdit ? "" : "Enter password"}
+      value={allowPasswordEdit || !isEdit ? formData.password : "********"}
+      onChange={(e) => {
+        if (allowPasswordEdit || !isEdit) handleInputChange(e)
+      }}
+      onBlur={handleBlur}
+      readOnly={isEdit && !allowPasswordEdit}
+      disabled={isEdit && !allowPasswordEdit}
+      placeholder={isEdit && !allowPasswordEdit ? "" : "Enter password"}
       className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent pr-10 ${
         errors.password ? "border-red-500" : "border-gray-300"
-      } ${isEdit ? "bg-gray-100" : ""}`}
+      } ${isEdit && !allowPasswordEdit ? "bg-gray-100" : ""}`}
     />
-    {!isEdit && (
+    {!isEdit || allowPasswordEdit ? (
       <button
         type="button"
         onClick={() => setShowPassword((prev) => !prev)}
         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
         tabIndex={-1}
       >
-        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+        
       </button>
+    ) : null}
+  {/* Change password action when editing */}
+    {isEdit && (
+      <button
+  type="button"
+  onClick={() => {
+    setAllowPasswordEdit((prev) => {
+      const next = !prev
+      setFormData((fd) => ({ ...fd, password: "" }))
+      return next
+    })
+  }}
+  className={`ml-2 px-4 py-2 rounded-lg shadow-sm transition-all text-white whitespace-nowrap ${
+    allowPasswordEdit
+      ? "bg-red-600 hover:bg-red-700"
+      : "bg-gray-900 hover:bg-gray-800"
+  }`}
+>
+  {allowPasswordEdit ? "Cancel Change" : "Change Password"}
+</button>
+
     )}
   </div>
-  {!isEdit && errors.password && (
+   {( ( !isEdit || allowPasswordEdit ) && errors.password ) && (
     <p className="mt-1 text-sm text-red-500">{errors.password}</p>
   )}
 </div>
